@@ -16,27 +16,91 @@
 </head>
 
 <body>
-  <test-fixture id='eras-i18n-fixture'>
+  <test-fixture id='eras-i18n-fixture_1'>
     <template>
-      <eras-i18n-local path='locale-en.json'></eras-i18n-local>
-      <eras-i18n id='success' key='test-string'></eras-i18n>
-      <eras-i18n id='failure' key='other-string'></eras-i18n>
+      <eras-i18n-locale path='locale-en.json'></eras-i18n-locale>
+      <eras-i18n key='test-string'></eras-i18n>
+    </template>
+  </test-fixture>
+
+  <test-fixture id='eras-i18n-fixture_2'>
+    <template>
+      <eras-i18n key='other-string'></eras-i18n>
+      <eras-i18n-locale path='locale-en.json'></eras-i18n-locale>
     </template>
   </test-fixture>
 
   <script>
     suite('eras-i18n', function () {
-      var f;
+      suite('setup', function () {
+        suite('locale first', function () {
+          var locale;
+          var i18n;
 
-      setup(function () {
-        f = fixture('eras-i18n-fixture');
-      });
-      test('instantiation', function (done) {
-        flush(function () {
-          console.log(f[0]);
-          console.log(f[1]);
-          console.log(f[2]);
-          done();
+          var waitSpy;
+          var i18nSpy;
+
+          setup(function () {
+            var f = fixture('eras-i18n-fixture_1');
+            locale = f[0];
+            i18n = f[1];
+
+            waitSpy = sinon.spy(i18n, '_waitingChanged');
+            i18nSpy = sinon.spy(i18n, '_i18n');
+          });
+
+          teardown(function () {
+            waitSpy.restore();
+            i18nSpy.restore();
+          });
+
+          test('instantiation', function () {
+            assert.equal('eras-i18n-locale', locale.is);
+            assert.equal('eras-i18n', i18n.is);
+          });
+
+          test('calls', function () {
+            flush(function(){
+              assert(waitSpy.calledOnce, 'expected `eras-i18n._waitingChanged` to have been called once not ' + waitSpy.callCount + ' times');
+              assert(i18nSpy.calledOnce, 'expected `eras-i18n._i18n` to have been called once not ' + i18nSpy.callCount + ' times');
+              assert.equal('Hello world!', i18n.value);
+            });
+          });
+        });
+
+        suite('locale last', function () {
+          var locale;
+          var i18n;
+
+          var waitSpy;
+          var i18nSpy;
+
+          setup(function () {
+            var f = fixture('eras-i18n-fixture_2');
+            locale = f[1];
+            i18n = f[0];
+
+            waitSpy = sinon.spy(i18n, '_waitingChanged');
+            i18nSpy = sinon.spy(i18n, '_i18n');
+          });
+
+          teardown(function () {
+            waitSpy.restore();
+            i18nSpy.restore();
+          });
+
+          test('instantiation', function () {
+            assert.equal('eras-i18n-locale', locale.is);
+            assert.equal('eras-i18n', i18n.is);
+          });
+
+          test('calls', function () {
+            flush(function(){
+              assert(waitSpy.calledOnce, 'expected `eras-i18n._waitingChanged` to have been called once not ' + waitSpy.callCount + ' times');
+              assert(i18nSpy.calledOnce, 'expected `eras-i18n._i18n` to have been called once not ' + i18nSpy.callCount + ' times');
+              assert.equal('Hello world!', i18n.value);
+            });
+          });
         });
       });
     });

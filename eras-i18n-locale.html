@@ -15,9 +15,8 @@ Asynchronously loads the specified locale file as a global object for use by the
 
 <dom-module id="eras-i18n-locale">
   <template>
-    <iron-ajax auto url='[[path]]' handle-as='json' loading='{{loading}}' on-response='_handle'></iron-ajax>
+    <iron-ajax id='ajax' auto url='[[path]]' handle-as='json' loading='{{loading}}' on-response='_handle'></iron-ajax>
   </template>
-
   <script>
     Polymer({
       is: 'eras-i18n-locale',
@@ -32,7 +31,8 @@ Asynchronously loads the specified locale file as a global object for use by the
         loading: {
           type: Boolean,
           notify: true,
-          reflectToAttribute: true
+          reflectToAttribute: true,
+          value: true
         }
       },
 
@@ -48,10 +48,8 @@ Asynchronously loads the specified locale file as a global object for use by the
       _handle: function (e) {
         window.eras_i18n = e.detail.response;
         this.fire('eras-i18n-locale-loaded');
-        console.log(this.is + '._handle', e.detail.response);
 
         document.addEventListener('eras-i18n-waiting', function (e) {
-          console.log(e.detail.i18n.is + '.waiting', e.detail.i18n.key);
           e.detail.i18n.waiting = false;
         });
       }

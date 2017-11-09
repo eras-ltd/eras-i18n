@@ -38,16 +38,16 @@ Then you can display resources like this:
           notify: true,
           reflectToAttribute: true,
           observer: '_waitingChanged'
-        }
+        },
+
+        value: String
       },
 
       attached: function () {
-        console.log(this.is + '.attached', this.key);
         this.fire('eras-i18n-waiting', { i18n: this });
 
         var self = this;
         document.addEventListener('eras-i18n-locale-loaded', function () {
-          console.log(self.is+' caught eras-i18n-locale-loaded', self.key);
           self.waiting = false;
         });
       },
@@ -58,7 +58,6 @@ Then you can display resources like this:
        * @param {Boolean} waiting
        */
       _waitingChanged: function (waiting) {
-        console.log(this.is + '._waitingChanged', waiting, this.key);
         if (!waiting)
           this.innerHTML = this._i18n(this.key);
       },
@@ -70,20 +69,19 @@ Then you can display resources like this:
        * @return {String}
        */
       _i18n: function (key) {
-        console.log(this.is + '._i18n', this.key);
         if (window.eras_i18n === undefined) {
           console.warn('i18n object not defined');
-          return key;
+          this.value = key;
         } else {
-          var value = window.eras_i18n[key];
-
-          if (!value) {
+          if (window.eras_i18n.hasOwnProperty(key)) {
+            this.value = window.eras_i18n[key]
+          } else {
             console.warn('i18n warning: Could not find key: ' + key)
-            return key;
+            this.value = key;
           }
-
-          return value;
         }
+
+        return this.value;
       }
     });
   </script>
