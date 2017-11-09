@@ -11,6 +11,7 @@
     <link rel="import" href="../../iron-demo-helpers/demo-pages-shared-styles.html">
     <link rel="import" href="../../iron-demo-helpers/demo-snippet.html">
     <link rel="import" href="../eras-i18n.html">
+    <link rel="import" href="../eras-i18n-locale.html">
 
     <style is="custom-style" include="demo-pages-shared-styles">
     </style>
@@ -20,7 +21,11 @@
       <h3>Basic eras-i18n demo</h3>
       <demo-snippet>
         <template>
-          <eras-i18n></eras-i18n>
+          
+          <eras-i18n key='demo-string'></eras-i18n>
+          <eras-i18n key='demo-html'></eras-i18n>
+          <eras-i18n key='demo-missing'></eras-i18n>
+          <eras-i18n-locale path="locale-en.json"></eras-i18n-locale>
         </template>
       </demo-snippet>
     </div>

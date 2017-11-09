@@ -1,0 +1,65 @@
+<link rel="import" href="../polymer/polymer.html">
+<link rel='import' href='../iron-ajax/iron-ajax.html'>
+
+<!--
+`eras-i18n-locale`
+
+Asynchronously loads the specified locale file as a global object for use by the `eras-i18n` elements.
+
+```html
+<eras-i18n-locale path='/locale-en.json'></eras-i18n-locale>
+```
+
+@demo demo/eras-i18n_demo.html
+-->
+
+<dom-module id="eras-i18n-locale">
+  <template>
+    <iron-ajax auto url='[[path]]' handle-as='json' loading='{{loading}}' on-response='_handle'></iron-ajax>
+  </template>
+
+  <script>
+    Polymer({
+      is: 'eras-i18n-locale',
+      hostAttributes: {
+        hidden: true
+      },
+      properties: {
+        /** Url to the culture specific locale file */
+        path: String,
+
+        /** Signifies whether we are still waiting for the locale file to load */
+        loading: {
+          type: Boolean,
+          notify: true,
+          reflectToAttribute: true
+        }
+      },
+
+      /**
+       * Handles the response from `iron-ajax` that returns
+       * the locale specific json file. Adds json object to 
+       * window to make it globally available, then fires a
+       * `eras-i18n-locale-loaded` event to alert to announce that
+       * it's ready. Will then listen for any more `eras-i18n-waiting`
+       * events and tell the firing `eras-i18n`s that it's ready.
+       * @param {Event} e `iron-ajax.response`
+       */
+      _handle: function (e) {
+        window.eras_i18n = e.detail.response;
+        this.fire('eras-i18n-locale-loaded');
+        console.log(this.is + '._handle', e.detail.response);
+
+        document.addEventListener('eras-i18n-waiting', function (e) {
+          console.log(e.detail.i18n.is + '.waiting', e.detail.i18n.key);
+          e.detail.i18n.waiting = false;
+        });
+      }
+
+      /**
+       * Fired when the locale file has been loaded
+       * @event eras-i18n-locale-loaded
+       */
+    });
+  </script>
+</dom-module>

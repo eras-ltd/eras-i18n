@@ -1,34 +1,90 @@
-<link rel="import" href="../polymer/polymer.html">
-
+<link rel='import' href='../polymer/polymer.html'>
 <!--
 `eras-i18n`
 
+Looks up and displays the resource specified by the key. Can display plain text and HTML. MarkDown will need to be converted to HTML before inclusion in the locale file.
+
+First you need to load the locale file like this:
+
+```html
+<eras-i18n-locale path='/locale-en.json'></eras-i18n-locale>
+```
+
+Then you can display resources like this:
+
+```html
+<eras-i18n key='some-key'></eras-i18n>
+```
 
 @demo demo/eras-i18n_demo.html
 -->
-
-<dom-module id="eras-i18n">
+<dom-module id='eras-i18n'>
   <template>
-    <style>
-      :host {
-        display: block;
-      }
-    </style>
-    <h2>Hello [[prop1]]!</h2>
-  </template>
 
+  </template>
   <script>
     Polymer({
-
       is: 'eras-i18n',
-
       properties: {
-        prop1: {
-          type: String,
-          value: 'eras-i18n',
-        },
+        /** The key for the desired resource */
+        key: String,
+
+        /**
+         * Signifies whether we are still waiting for the locale
+         * file to be loaded.
+         */
+        waiting: {
+          type: Boolean,
+          notify: true,
+          reflectToAttribute: true,
+          observer: '_waitingChanged'
+        }
       },
 
+      attached: function () {
+        console.log(this.is + '.attached', this.key);
+        this.fire('eras-i18n-waiting', { i18n: this });
+
+        var self = this;
+        document.addEventListener('eras-i18n-locale-loaded', function () {
+          console.log(self.is+' caught eras-i18n-locale-loaded', self.key);
+          self.waiting = false;
+        });
+      },
+
+      /**
+       * Observed changes to `waiting` and updates `innerHTML` 
+       * by calling `_i18n` once loaded.
+       * @param {Boolean} waiting
+       */
+      _waitingChanged: function (waiting) {
+        console.log(this.is + '._waitingChanged', waiting, this.key);
+        if (!waiting)
+          this.innerHTML = this._i18n(this.key);
+      },
+
+      /**
+       * Looks up the supplied key in the global `window.eras_i18n`
+       * object and returns the associated value.
+       * @param {String} key
+       * @return {String}
+       */
+      _i18n: function (key) {
+        console.log(this.is + '._i18n', this.key);
+        if (window.eras_i18n === undefined) {
+          console.warn('i18n object not defined');
+          return key;
+        } else {
+          var value = window.eras_i18n[key];
+
+          if (!value) {
+            console.warn('i18n warning: Could not find key: ' + key)
+            return key;
+          }
+
+          return value;
+        }
+      }
     });
   </script>
 </dom-module>
