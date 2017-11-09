@@ -1,0 +1,34 @@
+<link rel="import" href="../polymer/polymer.html">
+
+<!--
+`eras-i18n`
+
+
+@demo demo/eras-i18n_demo.html
+-->
+
+<dom-module id="eras-i18n">
+  <template>
+    <style>
+      :host {
+        display: block;
+      }
+    </style>
+    <h2>Hello [[prop1]]!</h2>
+  </template>
+
+  <script>
+    Polymer({
+
+      is: 'eras-i18n',
+
+      properties: {
+        prop1: {
+          type: String,
+          value: 'eras-i18n',
+        },
+      },
+
+    });
+  </script>
+</dom-module>
