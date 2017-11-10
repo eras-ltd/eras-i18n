@@ -40,14 +40,23 @@ Then you can display resources like this:
           observer: '_waitingChanged'
         },
 
-        value: String
+        /**
+         * **Only to be used for tests**
+         * 
+         * Set this to a random string, it then gets appended to 
+         * the names of events that are fired and listened to.
+         * Prevents other tests that are running async from 
+         * interfering. *Make sure you set it to the same as
+         * the one you set on `eras-i18n-locale`*
+         */
+        testScope: String
       },
 
       attached: function () {
-        this.fire('eras-i18n-waiting', { i18n: this });
+        this.fire('eras-i18n-waiting' + this.testScope, { i18n: this });
 
         var self = this;
-        document.addEventListener('eras-i18n-locale-loaded', function () {
+        document.addEventListener('eras-i18n-locale-loaded' + this.testScope, function () {
           self.waiting = false;
         });
       },
@@ -71,17 +80,15 @@ Then you can display resources like this:
       _i18n: function (key) {
         if (window.eras_i18n === undefined) {
           console.warn('i18n object not defined');
-          this.value = key;
+          return key;
         } else {
           if (window.eras_i18n.hasOwnProperty(key)) {
-            this.value = window.eras_i18n[key]
+            return window.eras_i18n[key]
           } else {
             console.warn('i18n warning: Could not find key: ' + key)
-            this.value = key;
+            return key;
           }
         }
-
-        return this.value;
       }
     });
   </script>

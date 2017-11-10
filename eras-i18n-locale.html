@@ -33,7 +33,18 @@ Asynchronously loads the specified locale file as a global object for use by the
           notify: true,
           reflectToAttribute: true,
           value: true
-        }
+        },
+
+        /**
+         * **Only to be used for tests**
+         * 
+         * Set this to a random string, it then gets appended to 
+         * the names of events that are fired and listened to.
+         * Prevents other tests that are running async from 
+         * interfering. *Make sure you set it to the same as
+         * the one you set on `eras-i18n`*
+         */
+         testScope: String
       },
 
       /**
@@ -47,7 +58,7 @@ Asynchronously loads the specified locale file as a global object for use by the
        */
       _handle: function (e) {
         window.eras_i18n = e.detail.response;
-        this.fire('eras-i18n-locale-loaded');
+        this.fire('eras-i18n-locale-loaded'+this.testScope);
 
         document.addEventListener('eras-i18n-waiting', function (e) {
           e.detail.i18n.waiting = false;

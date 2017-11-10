@@ -16,91 +16,88 @@
 </head>
 
 <body>
-  <test-fixture id='eras-i18n-fixture_1'>
-    <template>
-      <eras-i18n-locale path='locale-en.json'></eras-i18n-locale>
-      <eras-i18n key='test-string'></eras-i18n>
-    </template>
-  </test-fixture>
-
-  <test-fixture id='eras-i18n-fixture_2'>
-    <template>
-      <eras-i18n key='other-string'></eras-i18n>
-      <eras-i18n-locale path='locale-en.json'></eras-i18n-locale>
+  <test-fixture id='eras-i18n-fixture'>
+    <template is='dom-template'>
+      <eras-i18n id='i18n-1' key='text-1' test-scope='{{scope}}'></eras-i18n>
+      <eras-i18n-locale path='{{path}}' test-scope='{{scope}}'></eras-i18n-locale>
+      <eras-i18n id='i18n-2' key='text-2' test-scope='{{scope}}'></eras-i18n>
     </template>
   </test-fixture>
 
   <script>
     suite('eras-i18n', function () {
-      suite('setup', function () {
-        suite('locale first', function () {
-          var locale;
-          var i18n;
+      var locale;
+      var i18n_1;
+      var i18n_2;
+      var ajax;
 
-          var waitSpy;
-          var i18nSpy;
+      var spy_handle;
+      var spy_i18n_1;
+      var spy_i18n_2;
 
-          setup(function () {
-            var f = fixture('eras-i18n-fixture_1');
-            locale = f[0];
-            i18n = f[1];
+      var path = 'locale-en.json';
+      var expected = 'Hello world!!!';
+      var request;
+      var server;
+      var responseHeaders = {
+        json: { 'Content-Type': 'application/json' }
+      };
 
-            waitSpy = sinon.spy(i18n, '_waitingChanged');
-            i18nSpy = sinon.spy(i18n, '_i18n');
-          });
+      setup(function () {
+        var scope = '-' + Math.random().toString(36).substring(2, 10);
+        var _f = fixture('eras-i18n-fixture', { path: path, scope: scope });
+        locale = _f[1];
+        i18n_1 = _f[0];
+        i18n_2 = _f[2];
+        ajax = locale.$.ajax;
 
-          teardown(function () {
-            waitSpy.restore();
-            i18nSpy.restore();
-          });
+        spy_handle = sinon.spy(locale, '_handle');
+        spy_i18n_1 = sinon.spy(i18n_1, '_i18n');
+        spy_i18n_2 = sinon.spy(i18n_2, '_i18n');
 
-          test('instantiation', function () {
-            assert.equal('eras-i18n-locale', locale.is);
-            assert.equal('eras-i18n', i18n.is);
-          });
+        server = sinon.fakeServer.create();
+        server.respondWith(
+          'GET',
+          path, [
+            200,
+            responseHeaders.json,
+            JSON.stringify({ 'text-1': expected })
+          ]
+        );
+      });
 
-          test('calls', function () {
-            flush(function(){
-              assert(waitSpy.calledOnce, 'expected `eras-i18n._waitingChanged` to have been called once not ' + waitSpy.callCount + ' times');
-              assert(i18nSpy.calledOnce, 'expected `eras-i18n._i18n` to have been called once not ' + i18nSpy.callCount + ' times');
-              assert.equal('Hello world!', i18n.value);
-            });
-          });
+      teardown(function () {
+        spy_handle.restore();
+        server.restore();
+      });
+
+      test('instantiation', function (done) {
+        assert.equal(locale.is, 'eras-i18n-locale');
+        assert.equal(i18n_1.is, 'eras-i18n');
+        assert.equal(i18n_2.is, 'eras-i18n');
+        assert.equal(ajax.is, 'iron-ajax');
+        done();
+      });
+
+      test('ajax', function (done) {
+        request = ajax.generateRequest();
+        server.respond();
+        flush(function () {
+          assert(spy_handle.calledOnce, 'expected `._handle` to have been called once not ' + spy_handle.callCount + ' times')
+          done();
         });
+      });
 
-        suite('locale last', function () {
-          var locale;
-          var i18n;
+      test('i18n', function (done) {
+        request = ajax.generateRequest();
+        server.respond();
+        flush(function () {
+          assert(spy_i18n_1.calledOnce, 'expected `._i18n` to have been called once not ' + spy_i18n_1.callCount + ' times')
+          assert.equal(expected, spy_i18n_1.returnValues[0], 'expected this key to have been found and for it to return `' + expected + '` not `' + spy_i18n_1.returnValues[0] + '`');
 
-          var waitSpy;
-          var i18nSpy;
-
-          setup(function () {
-            var f = fixture('eras-i18n-fixture_2');
-            locale = f[1];
-            i18n = f[0];
-
-            waitSpy = sinon.spy(i18n, '_waitingChanged');
-            i18nSpy = sinon.spy(i18n, '_i18n');
-          });
-
-          teardown(function () {
-            waitSpy.restore();
-            i18nSpy.restore();
-          });
-
-          test('instantiation', function () {
-            assert.equal('eras-i18n-locale', locale.is);
-            assert.equal('eras-i18n', i18n.is);
-          });
-
-          test('calls', function () {
-            flush(function(){
-              assert(waitSpy.calledOnce, 'expected `eras-i18n._waitingChanged` to have been called once not ' + waitSpy.callCount + ' times');
-              assert(i18nSpy.calledOnce, 'expected `eras-i18n._i18n` to have been called once not ' + i18nSpy.callCount + ' times');
-              assert.equal('Hello world!', i18n.value);
-            });
-          });
+          assert(spy_i18n_2.calledOnce, 'expected `._i18n` to have been called once not ' + spy_i18n_2.callCount + ' times')
+          assert.equal(i18n_2.key, spy_i18n_2.returnValues[0], 'did not expect this key to have been found and for it to return `' + i18n_2.key + '` not `' + spy_i18n_2.returnValues[0] + '`');
+          done();
         });
       });
     });
