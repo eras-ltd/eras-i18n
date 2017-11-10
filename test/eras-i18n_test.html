@@ -167,6 +167,25 @@
           done();
         });
 
+        test('numbers', function (done) {
+          el._resource = 'Numbers: {0} {1} {2} {3} {4}';
+          el.arg0 = -2;
+          el.arg1 = -1;
+          el.arg2 = 0;
+          el.arg3 = 1;
+          el.arg4 = 2;
+          assert.equal('Numbers: -2 -1 0 1 2', el.innerHTML, 'expected `innerHTML` to have been set to `Numbers: -2 -1 0 1 2` not `' + el.innerHTML + '`');
+          done();
+        });
+
+        test('bools', function (done) {
+          el._resource = 'Bools: {0} {1}';
+          el.arg0 = true;
+          el.arg1 = false;
+          assert.equal('Bools: true false', el.innerHTML, 'expected `innerHTML` to have been set to `Bools: true false` not `' + el.innerHTML + '`');
+          done();
+        });
+
         test('update', function (done) {
           el._resource = 'Hello {0}!!!';
           el.arg0 = 'world';          

@@ -102,6 +102,11 @@ Then you can display resources like this:
        */
       _argsChanged: function (arg) {
         this._args = [this.arg0, this.arg1, this.arg2, this.arg3, this.arg4,];
+
+        // convert them all to strings
+        this._args = this._args.map(function(a){ return a !== undefined ? a.toString() : a; });
+
+        // remove empty args
         this._args = this._args.filter(function (a) { return a && a.length > 0; });
 
         if (this._resource)
