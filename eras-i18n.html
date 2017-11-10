@@ -13,7 +13,7 @@ First you need to load the locale file like this:
 Then you can display resources like this:
 
 ```html
-<eras-i18n key='some-key'></eras-i18n>
+<eras-i18n key='some-key' args='["cat","hat"]'></eras-i18n>
 ```
 
 @demo demo/eras-i18n_demo.html
@@ -28,6 +28,17 @@ Then you can display resources like this:
       properties: {
         /** The key for the desired resource */
         key: String,
+
+        /**
+         * An array of strings that will be substituted into the 
+         * string specified by `key` using C# like `{0}` markers.
+         * *Basically works a bit like C# `string.format()`*
+         * @type {String[]}
+         */
+        args: {
+          type: Array,
+          value: []
+        },
 
         /**
          * Signifies whether we are still waiting for the locale
@@ -63,12 +74,18 @@ Then you can display resources like this:
 
       /**
        * Observed changes to `waiting` and updates `innerHTML` 
-       * by calling `_i18n` once loaded.
+       * by calling `_get` and `_substitute` once loaded.
        * @param {Boolean} waiting
        */
       _waitingChanged: function (waiting) {
-        if (!waiting)
-          this.innerHTML = this._i18n(this.key);
+        if (waiting) return;
+
+        var content = this._get(this.key);
+
+        if (content.success)
+          content.value = this._substitute(content.value, this.args);
+
+        this.innerHTML = content.value;
       },
 
       /**
@@ -77,18 +94,31 @@ Then you can display resources like this:
        * @param {String} key
        * @return {String}
        */
-      _i18n: function (key) {
+      _get: function (key) {
         if (window.eras_i18n === undefined) {
           console.warn('i18n object not defined');
-          return key;
+          return { value: key, success: false };
         } else {
           if (window.eras_i18n.hasOwnProperty(key)) {
-            return window.eras_i18n[key]
+            return { value: window.eras_i18n[key], success: true }
           } else {
             console.warn('i18n warning: Could not find key: ' + key)
-            return key;
+            return { value: key, success: false };
           }
         }
+      },
+
+      /**
+       * Substitutes `{0}` format markers found in `value` for 
+       * the corresponding string in `args`.
+       * @param {String} value
+       * @param {String[]}
+       */
+      _substitute: function (value, args) {
+        for (var i = 0; i < args.length; i++)
+          value = value.replace(new RegExp('\\{' + i + '\\}', 'g'), args[i]);
+
+        return value;
       }
     });
   </script>
