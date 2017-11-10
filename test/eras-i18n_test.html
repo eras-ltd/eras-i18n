@@ -18,7 +18,7 @@
 <body>
   <test-fixture id='eras-i18n-locale-fixture'>
     <template is='dom-template'>
-      <eras-i18n id='i18n-1' key='text-1' args='["Ben","Miller"]' test-scope='{{scope}}'></eras-i18n>
+      <eras-i18n id='i18n-1' key='text-1' arg0='Ben' arg1='Miller' test-scope='{{scope}}'></eras-i18n>
       <eras-i18n-locale path='{{path}}' test-scope='{{scope}}'></eras-i18n-locale>
       <eras-i18n id='i18n-2' key='text-2' test-scope='{{scope}}'></eras-i18n>
     </template>
@@ -26,7 +26,7 @@
 
   <test-fixture id='eras-i18n-fixture'>
     <template is='dom-template'>
-      <eras-i18n test-scope='{{scope}}'></eras-i18n>
+      <eras-i18n test-scope='{{scope}}' arg0$='{{arg0}}' arg1$='{{arg1}}' arg2$='{{arg2}}'></eras-i18n>
     </template>
   </test-fixture>
 
@@ -37,10 +37,13 @@
         var i18n_1;
         var i18n_2;
         var ajax;
+        var resource = 'Hello {0} {1}!!!';
 
         var spy_handle;
-        var spy_i18n_1;
-        var spy_i18n_2;
+        var spy_get_1;
+        var spy_get_2;
+        var spy_substitute_1;
+        var spy_substitute_2;
 
         var path = 'locale-en.json';
         var request;
@@ -58,8 +61,10 @@
           ajax = locale.$.ajax;
 
           spy_handle = sinon.spy(locale, '_handle');
-          spy_i18n_1 = sinon.spy(i18n_1, '_get');
-          spy_i18n_2 = sinon.spy(i18n_2, '_get');
+          spy_get_1 = sinon.spy(i18n_1, '_get');
+          spy_get_2 = sinon.spy(i18n_2, '_get');
+          spy_substitute_1 = sinon.spy(i18n_1, '_substitute');
+          spy_substitute_2 = sinon.spy(i18n_2, '_substitute');
 
           server = sinon.fakeServer.create();
           server.respondWith(
@@ -67,13 +72,17 @@
             path, [
               200,
               responseHeaders.json,
-              JSON.stringify({ 'text-1': 'Hello {0} {1}!!!' })
+              JSON.stringify({ 'text-1': resource })
             ]
           );
         });
 
         teardown(function () {
           spy_handle.restore();
+          spy_get_1.restore();
+          spy_get_2.restore();
+          spy_substitute_1.restore();
+          spy_substitute_2.restore();
           server.restore();
         });
 
@@ -98,15 +107,17 @@
           request = ajax.generateRequest();
           server.respond();
           flush(function () {
-            assert(spy_i18n_1.calledOnce, 'expected `._i18n` to have been called once not ' + spy_i18n_1.callCount + ' times')
-            var r1 = spy_i18n_1.returnValues[0];
+            assert(spy_get_1.calledOnce, 'expected `._get` to have been called once not ' + spy_get_1.callCount + ' times')
+            assert(spy_substitute_1.calledOnce, 'expected `._substitute` to have been called once not ' + spy_substitute_1.callCount + ' times')
+            var r1 = spy_get_1.returnValues[0];
             assert.equal(true, r1.success, 'expected this key to have been found');
-            assert.equal('Hello Ben Miller!!!', r1.value, 'expected to return the string: `Hello Ben Miller!!!` not `' + r1.value + '`');
+            assert.equal(resource, r1.resource, 'expected to return the string: `Hello Ben Miller!!!` not `' + r1.resource + '`');
 
-            assert(spy_i18n_2.calledOnce, 'expected `._i18n` to have been called once not ' + spy_i18n_2.callCount + ' times')
-            var r2 = spy_i18n_2.returnValues[0];
+            assert(spy_get_2.calledOnce, 'expected `._get` to have been called once not ' + spy_get_2.callCount + ' times')
+            assert(spy_substitute_2.notCalled, 'did not expect `._substitute` to have been called, was called ' + spy_substitute_2.callCount + ' times')
+            var r2 = spy_get_2.returnValues[0];
             assert.equal(false, r2.success, 'did not expect this key to have been found');
-            assert.equal(i18n_2.key, r2.value, 'expected to return the key: `' + i18n_2.key + '` not `' + r2.value + '`');
+            assert.equal(undefined, r2.resource, 'did not expect `_get` to return a resource');
             done();
           });
         });
@@ -137,6 +148,23 @@
 
         for (var i = 0; i < data.length; i++)
           test(data[i].input, dataTest(data[i].input, data[i].args, data[i].expected));
+      });
+
+      suite('args', function () {
+        var scope;
+
+        setup(function () {
+          scope = '-' + Math.random().toString(36).substring(2, 10);          
+        });
+
+        test('string', function(done){
+          var el = fixture('eras-i18n-fixture', { scope: scope, arg1:'string' });
+          console.log('args.string', el._allArgs);
+          done();
+        });
+
+        
+
       });
     });
   </script>

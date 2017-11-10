@@ -1,4 +1,5 @@
 {
   "demo-string": "Hello world!",
-  "demo-html": "<h1>Header</h2><p>Just a paragraph</p>"
+  "demo-html": "<h1>Header</h2><p>Just a paragraph</p>",
+  "demo-substitution": "My name is {0} {1}"
 }

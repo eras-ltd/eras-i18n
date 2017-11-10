@@ -13,7 +13,7 @@ First you need to load the locale file like this:
 Then you can display resources like this:
 
 ```html
-<eras-i18n key='some-key' args='["cat","hat"]'></eras-i18n>
+<eras-i18n key='some-key' arg0='cat' arg1='hat'></eras-i18n>
 ```
 
 @demo demo/eras-i18n_demo.html
@@ -29,13 +29,25 @@ Then you can display resources like this:
         /** The key for the desired resource */
         key: String,
 
+        /**  */
+        _resource: String,
+
         /**
-         * An array of strings that will be substituted into the 
-         * string specified by `key` using C# like `{0}` markers.
-         * *Basically works a bit like C# `string.format()`*
+         * The first of a series of strings that will be substituted into 
+         * the string specified by `key` using C# like `{0}` markers.
+         */
+        arg0: String,
+        arg1: String,
+        arg2: String,
+        arg3: String,
+        arg4: String,
+
+        /**
+         * Array that is filled with the values of `arg0` through `arg4`
+         * when ever any of them are changed.
          * @type {String[]}
          */
-        args: {
+        _args: {
           type: Array,
           value: []
         },
@@ -63,6 +75,14 @@ Then you can display resources like this:
         testScope: String
       },
 
+      observers: [
+        '_argsChanged(arg0)',
+        '_argsChanged(arg1)',
+        '_argsChanged(arg2)',
+        '_argsChanged(arg3)',
+        '_argsChanged(arg4)'
+      ],
+
       attached: function () {
         this.fire('eras-i18n-waiting' + this.testScope, { i18n: this });
 
@@ -70,6 +90,19 @@ Then you can display resources like this:
         document.addEventListener('eras-i18n-locale-loaded' + this.testScope, function () {
           self.waiting = false;
         });
+      },
+
+      /**
+       * Observes changes to `arg0` through `arg4` and fills `_args` if any of them
+       * change, then filters out any empty ones. If `_resource` has been set then
+       * it will call `_substitute` and update `innerHTML`.
+       */
+      _argsChanged: function (arg) {
+        this._args = [this.arg0, this.arg1, this.arg2, this.arg3, this.arg4,];
+        this._args = this._args.filter(function (a) { return a && a.length > 0; });
+
+        if (this._resource)
+          this.innerHTML = this._substitute(this._resource, this._args);
       },
 
       /**
@@ -81,11 +114,12 @@ Then you can display resources like this:
         if (waiting) return;
 
         var content = this._get(this.key);
+        this._resource = content.resource;
 
         if (content.success)
-          content.value = this._substitute(content.value, this.args);
-
-        this.innerHTML = content.value;
+          this.innerHTML = this._substitute(this._resource, this._args);
+        else
+          this.innerHTML = this.key;
       },
 
       /**
@@ -97,13 +131,13 @@ Then you can display resources like this:
       _get: function (key) {
         if (window.eras_i18n === undefined) {
           console.warn('i18n object not defined');
-          return { value: key, success: false };
+          return { success: false };
         } else {
           if (window.eras_i18n.hasOwnProperty(key)) {
-            return { value: window.eras_i18n[key], success: true }
+            return { resource: window.eras_i18n[key], success: true }
           } else {
             console.warn('i18n warning: Could not find key: ' + key)
-            return { value: key, success: false };
+            return { success: false };
           }
         }
       },

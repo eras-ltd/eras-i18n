@@ -25,9 +25,16 @@
       <template>
         <eras-i18n-locale path="locale-en.json"></eras-i18n-locale>
 
-        <eras-i18n key='demo-string'></eras-i18n>
         <eras-i18n key='demo-html'></eras-i18n>
-        <eras-i18n key='demo-missing'></eras-i18n>
+        <h2>
+          <eras-i18n key='demo-string'></eras-i18n>
+        </h2>
+        <p>
+          <u><eras-i18n key='demo-substitution' arg0='Ben' arg1='Miller'></eras-i18n></u>
+        </p>
+        <p>
+          <eras-i18n key='demo-missing'></eras-i18n>
+        </p>
       </template>
     </demo-snippet>
   </div>
