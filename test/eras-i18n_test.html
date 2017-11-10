@@ -151,19 +151,30 @@
       });
 
       suite('args', function () {
-        var scope;
+        var el;
 
         setup(function () {
-          scope = '-' + Math.random().toString(36).substring(2, 10);          
+          var scope = '-' + Math.random().toString(36).substring(2, 10);
+          el = fixture('eras-i18n-fixture', { scope: scope });
         });
 
-        test('string', function(done){
-          var el = fixture('eras-i18n-fixture', { scope: scope, arg1:'string' });
-          console.log('args.string', el._allArgs);
+        test('basic', function (done) {
+          el._resource = '{0} {1} {2}';
+          el.arg0 = 'A';
+          el.arg1 = 'B';
+          el.arg2 = 'C';
+          assert.equal('A B C', el.innerHTML, 'expected `innerHTML` to have been set to `A B C` not `' + el.innerHTML + '`');
           done();
         });
 
-        
+        test('update', function (done) {
+          el._resource = 'Hello {0}!!!';
+          el.arg0 = 'world';          
+          assert.equal('Hello world!!!', el.innerHTML, 'expected `innerHTML` to have been set to `Hello world!!!` not `' + el.innerHTML + '`');
+          el.arg0 = 'Ben';
+          assert.equal('Hello Ben!!!', el.innerHTML, 'expected `innerHTML` to have been set to `Hello Ben!!!` not `' + el.innerHTML + '`');
+          done();
+        });
 
       });
     });
