@@ -13,13 +13,21 @@
   <script src='../bower_components/iron-test-helpers/mock-interactions.js'></script>
   <link rel='import' href='../eras-i18n-locale.html'>
   <link rel='import' href='elements/simple-i18n.html'>
+  <link rel='import' href='elements/input-i18n.html'>
 </head>
 
 <body>
-  <test-fixture id='eras-i18n-behavior-fixture'>
+  <test-fixture id='eras-i18n-behavior_div'>
     <template is='dom-template'>
       <eras-i18n-locale path='{{path}}' test-scope='{{scope}}'></eras-i18n-locale>
       <simple-i18n key$='{{key}}' args$='{{args}}' test-scope='{{scope}}'></simple-i18n>
+    </template>
+  </test-fixture>
+
+  <test-fixture id='eras-i18n-behavior_input'>
+    <template is='dom-template'>
+      <eras-i18n-locale path='{{path}}' test-scope='{{scope}}'></eras-i18n-locale>
+      <input-i18n key$='{{key}}' arg0$='{{arg0}}' arg1$='{{arg1}}' test-scope='{{scope}}'></input-i18n>
     </template>
   </test-fixture>
 
@@ -45,13 +53,14 @@
             JSON.stringify({
               'text-1': 'Hello {0}!!!',
               'text-2': 'Bye {0}!!!',
+              'text-3': 'The {0} is {1}',
             })
           ]
         );
       });
 
-      test('Hello world', function (done) {
-        var f = fixture('eras-i18n-behavior-fixture', {
+      test('div', function (done) {
+        var f = fixture('eras-i18n-behavior_div', {
           path: path,
           scope: scope,
           key: 'text-1',
@@ -63,12 +72,36 @@
 
         flush(function () {
           assert.equal('Hello world!!!', f[1].$.target.innerHTML);
-          
+
           f[1].args = ['Ben'];
           assert.equal('Hello Ben!!!', f[1].$.target.innerHTML);
-          
+
           f[1].key = ['text-2'];
           assert.equal('Bye Ben!!!', f[1].$.target.innerHTML);
+          done();
+        });
+      });
+      
+      test('input', function(done){
+        var f = fixture('eras-i18n-behavior_input', {
+          path: path,
+          scope: scope,
+          key: 'text-3',
+          arg0: 'car',
+          arg1: 'red'
+        });
+
+        request = ajax.generateRequest();
+        server.respond();
+
+        flush(function () {
+          assert.equal('The car is red', f[1].$.target.value);
+
+          f[1].arg1 = 'blue';
+          assert.equal('The car is blue', f[1].$.target.value);
+
+          f[1].key = ['text-2'];
+          assert.equal('Bye car!!!', f[1].$.target.value);
           done();
         });
       });

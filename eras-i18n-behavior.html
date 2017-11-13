@@ -6,7 +6,7 @@
    * attribute, so use of the `eras-i18n` element is not possible:
    * 
    * ```html
-   * <some-element label='{{_i18n(locale, "some-key", ["arg0", "arg1"])}}'></some-element>
+   * <some-element label='{{_i18n(locale, "some-key", "arg0", "arg1")}}'></some-element>
    * ```
    * 
    * **Important:** Polymer will escape any HTML being inserted via this method, as
@@ -76,11 +76,23 @@
         return key;
       }
 
-      args = args || [];
+      // if `args` is an array then just use it as it
+      // other wise compile it and any following arguments
+      // into an array
+      var _args;
+      if (args instanceof Array) {
+        _args = args
+      } else {
+        _args = [];
+        for (var i = 2; i < arguments.length; i++)
+          _args.push(arguments[i]);
+      }
+
       var resource = locale.resources[key];
 
-      for (var i = 0; i < args.length; i++)
-        resource = resource.replace(new RegExp('\\{' + i + '\\}', 'g'), args[i]);
+      // substitute `_args` for `{#}` markers
+      for (var i = 0; i < _args.length; i++)
+        resource = resource.replace(new RegExp('\\{' + i + '\\}', 'g'), _args[i]);
 
       return resource || key;
     },
