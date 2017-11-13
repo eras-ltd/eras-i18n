@@ -1,0 +1,27 @@
+<link rel='import' href='../../../polymer/polymer.html'>
+<link rel='import' href='../../eras-i18n-behavior.html'>
+<!--
+`simple-i18n`
+-->
+<dom-module id='simple-i18n'>
+  <template>
+    <style>
+      :host {
+        display: block;
+      }
+    </style>
+    <div id='target'>{{_i18n(locale, key, args)}}</div>
+  </template>
+  <script>
+    Polymer({
+      is: 'simple-i18n',
+      behaviors: [
+        Polymer.ErasI18nBehavior
+      ],
+      properties: {
+        key: String,
+        args: Array
+      }
+    });
+  </script>
+</dom-module>

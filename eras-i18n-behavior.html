@@ -1,0 +1,102 @@
+<link rel='import' href='../polymer/polymer.html'>
+<script>
+  /**
+   * Implement this behavior when you need direct access to the `_i18n` function. 
+   * Most likely use case for this is when you need to add text to an element via an 
+   * attribute, so use of the `eras-i18n` element is not possible:
+   * 
+   * ```html
+   * <some-element label='{{_i18n(locale, "some-key", ["arg0", "arg1"])}}'></some-element>
+   * ```
+   * 
+   * **Important:** Polymer will escape any HTML being inserted via this method, as
+   * such you should use the `eras-i18n` element wherever possible as it can deal with
+   * HTML by interacting with `innerHTML`.
+   * 
+   * @polymerBehavior Polymer.ErasI18nBehavior
+   */
+  Polymer.ErasI18nBehavior = {
+    properties: {
+      /**
+       * The `eras-i18n-locale` element that this element
+       * has been registered with. Set either when this elements
+       * hears a `eras-i18n-locale-loaded` event, or the locale
+       * hears this elements `eras-i18n-attached` event. Triggers
+       * `._localeChanged()` to be called when changed.
+       * @type {eras-i18n-locale}
+       */
+      locale: {
+        Type: Element,
+        observer: '_localeChanged'
+      },
+
+      /**
+       * **Only to be used for tests**
+       * 
+       * Set this to a random string, it then gets appended to 
+       * the names of events that are fired and listened to.
+       * Prevents other tests that are running async from 
+       * interfering. *Make sure you set it to the same as
+       * the one you set on `eras-i18n-locale`*
+       */
+      testScope: {
+        type: String,
+        value: ''
+      }
+    },
+
+    attached: function () {
+      this.fire('eras-i18n-attached' + this.testScope, { i18n: this });
+
+      var self = this;
+      document.addEventListener('eras-i18n-locale-loaded' + this.testScope, function (e) {
+        self.locale = e.detail.locale;
+        self.locale.i18ns.push(self);
+      });
+    },
+
+    /**
+     * Looks up a resource in `locale` specified by `key` 
+     * and substitutes in any `args`. Will return the `key`
+     * if the resource could not be found.
+     * @param {eras-i18n-locale} locale
+     * @param {String} key
+     * @param {Object[]} args Array of values to be inserted into resource (simple objects only!)
+     * @return {String}
+     */
+    _i18n: function (locale, key, args) {
+      if (!locale) {
+        console.warn('i18n warning: locale not defined');
+        return;
+      }
+
+      if (!locale.resources.hasOwnProperty(key)) {
+        console.warn('i18n warning: key not found `' + key + '`');
+        // TODO: do something clever here like fire ajax request to get missing resource
+        return key;
+      }
+
+      var resource = locale.resources[key];
+
+      for (var i = 0; i < args.length; i++)
+        resource = resource.replace(new RegExp('\\{' + i + '\\}', 'g'), args[i]);
+
+      return resource || key;
+    },
+
+    /**
+     * Observes changes to `locale`. Default implementation doesn't do anything,
+     * override this if you need to do something when the locale changes.
+     * In `eras-i18n` the locale being set needs to trigger an update for example. 
+     */
+    _localeChanged: function () {
+    }
+
+    /**
+     * Fired when the element is attached so that it can be registered with 
+     * the `eras-i18n-locale` element.
+     * @event eras-i18n-attached
+     * @param {{i18n:Element}}
+     */
+  }
+</script>

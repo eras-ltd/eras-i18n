@@ -26,7 +26,7 @@
 
   <test-fixture id='eras-i18n-fixture'>
     <template is='dom-template'>
-      <eras-i18n test-scope='{{scope}}' arg0$='{{arg0}}' arg1$='{{arg1}}' arg2$='{{arg2}}'></eras-i18n>
+      <eras-i18n test-scope='{{scope}}' key$='{{key}}' arg0$='{{arg0}}' arg1$='{{arg1}}' arg2$='{{arg2}}'></eras-i18n>
     </template>
   </test-fixture>
 
@@ -40,10 +40,8 @@
         var resource = 'Hello {0} {1}!!!';
 
         var spy_handle;
-        var spy_get_1;
-        var spy_get_2;
-        var spy_substitute_1;
-        var spy_substitute_2;
+        var spy_i18n_1;
+        var spy_i18n_2;;
 
         var path = 'locale-en.json';
         var request;
@@ -61,10 +59,8 @@
           ajax = locale.$.ajax;
 
           spy_handle = sinon.spy(locale, '_handle');
-          spy_get_1 = sinon.spy(i18n_1, '_get');
-          spy_get_2 = sinon.spy(i18n_2, '_get');
-          spy_substitute_1 = sinon.spy(i18n_1, '_substitute');
-          spy_substitute_2 = sinon.spy(i18n_2, '_substitute');
+          spy_i18n_1 = sinon.spy(i18n_1, '_i18n');
+          spy_i18n_2 = sinon.spy(i18n_2, '_i18n');
 
           server = sinon.fakeServer.create();
           server.respondWith(
@@ -79,10 +75,8 @@
 
         teardown(function () {
           spy_handle.restore();
-          spy_get_1.restore();
-          spy_get_2.restore();
-          spy_substitute_1.restore();
-          spy_substitute_2.restore();
+          spy_i18n_1.restore();
+          spy_i18n_2.restore();
           server.restore();
         });
 
@@ -107,17 +101,11 @@
           request = ajax.generateRequest();
           server.respond();
           flush(function () {
-            assert(spy_get_1.calledOnce, 'expected `._get` to have been called once not ' + spy_get_1.callCount + ' times')
-            assert(spy_substitute_1.calledOnce, 'expected `._substitute` to have been called once not ' + spy_substitute_1.callCount + ' times')
-            var r1 = spy_get_1.returnValues[0];
-            assert.equal(true, r1.success, 'expected this key to have been found');
-            assert.equal(resource, r1.resource, 'expected to return the string: `Hello Ben Miller!!!` not `' + r1.resource + '`');
+            assert(spy_i18n_1.calledOnce, 'expected `._i18n` to have been called once not ' + spy_i18n_1.callCount + ' times')
+            assert.equal(`Hello Ben Miller!!!`, spy_i18n_1.returnValues[0], 'expected to return the string: `Hello Ben Miller!!!` not `' + spy_i18n_1.returnValues[0] + '`');
 
-            assert(spy_get_2.calledOnce, 'expected `._get` to have been called once not ' + spy_get_2.callCount + ' times')
-            assert(spy_substitute_2.notCalled, 'did not expect `._substitute` to have been called, was called ' + spy_substitute_2.callCount + ' times')
-            var r2 = spy_get_2.returnValues[0];
-            assert.equal(false, r2.success, 'did not expect this key to have been found');
-            assert.equal(undefined, r2.resource, 'did not expect `_get` to return a resource');
+            assert(spy_i18n_2.calledOnce, 'expected `._i18n` to have been called once not ' + spy_i18n_2.callCount + ' times')
+            assert.equal('text-2', spy_i18n_2.returnValues[0], 'expected the key `text-2` to have been returned, not: ' + spy_i18n_2.returnValues[0]);
             done();
           });
         });
@@ -128,12 +116,16 @@
 
         setup(function () {
           var scope = '-' + Math.random().toString(36).substring(2, 10);
-          el = fixture('eras-i18n-fixture', { scope: scope })
+          el = fixture('eras-i18n-fixture', { scope: scope, key: "some-key" })
         });
 
         var dataTest = function (input, args, expected) {
           return function (done) {
-            var actual = el._substitute(input, args);
+            var locale = {};
+            locale.resources = {};
+            locale.resources[el.key] = input;
+
+            var actual = el._i18n(locale, el.key, args);
             assert.equal(expected, actual, 'expected `' + expected + '` not `' + actual + '`');
             done();
           };
@@ -155,40 +147,40 @@
 
         setup(function () {
           var scope = '-' + Math.random().toString(36).substring(2, 10);
-          el = fixture('eras-i18n-fixture', { scope: scope });
+          el = fixture('eras-i18n-fixture', { scope: scope, key: 'some-key' });
+          el.locale = {
+            resources: {},
+            loading: true
+          };
         });
 
-        test('basic', function (done) {
-          el._resource = '{0} {1} {2}';
-          el.arg0 = 'A';
-          el.arg1 = 'B';
-          el.arg2 = 'C';
-          assert.equal('A B C', el.innerHTML, 'expected `innerHTML` to have been set to `A B C` not `' + el.innerHTML + '`');
-          done();
-        });
+        var dataTest = function (resource, args, expected) {
+          return function (done) {
+            el.locale.resources[el.key] = resource;
+            el.locale.loading = false;
 
-        test('numbers', function (done) {
-          el._resource = 'Numbers: {0} {1} {2} {3} {4}';
-          el.arg0 = -2;
-          el.arg1 = -1;
-          el.arg2 = 0;
-          el.arg3 = 1;
-          el.arg4 = 2;
-          assert.equal('Numbers: -2 -1 0 1 2', el.innerHTML, 'expected `innerHTML` to have been set to `Numbers: -2 -1 0 1 2` not `' + el.innerHTML + '`');
-          done();
-        });
+            for (var i = 0; i < args.length; i++)
+              el['arg' + i] = args[i]
 
-        test('bools', function (done) {
-          el._resource = 'Bools: {0} {1}';
-          el.arg0 = true;
-          el.arg1 = false;
-          assert.equal('Bools: true false', el.innerHTML, 'expected `innerHTML` to have been set to `Bools: true false` not `' + el.innerHTML + '`');
-          done();
-        });
+            assert.equal(expected, el.innerHTML, 'expected `innerHTML` to have been set to `' + expected + '` not `' + el.innerHTML + '`');
+            done();
+          };
+        };
+
+        var data = [
+          { name: 'basic', resource: '{0} {1} {2}', args: ['A', 'B', 'C'], expected: 'A B C' },
+          { name: 'numbers', resource: '{0} {1} {2} {3} {4}', args: [-2, -1, 0, 1, 2], expected: '-2 -1 0 1 2' },
+          { name: 'bools', resource: '{0} > {1}', args: [true, false], expected: 'true &gt; false' }
+        ];
+
+        for (var i = 0; i < data.length; i++)
+          test(data[i].name, dataTest(data[i].resource, data[i].args, data[i].expected));
 
         test('update', function (done) {
-          el._resource = 'Hello {0}!!!';
-          el.arg0 = 'world';          
+          el.locale.resources[el.key] = 'Hello {0}!!!';
+          el.locale.loading = false;
+          
+          el.arg0 = 'world';
           assert.equal('Hello world!!!', el.innerHTML, 'expected `innerHTML` to have been set to `Hello world!!!` not `' + el.innerHTML + '`');
           el.arg0 = 'Ben';
           assert.equal('Hello Ben!!!', el.innerHTML, 'expected `innerHTML` to have been set to `Hello Ben!!!` not `' + el.innerHTML + '`');

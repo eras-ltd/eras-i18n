@@ -4,7 +4,8 @@
 <!--
 `eras-i18n-locale`
 
-Asynchronously loads the specified locale file as a global object for use by the `eras-i18n` elements.
+Asynchronously loads the specified locale file as a global object for use by the elements that
+implement `eras-i18n-behavior`
 
 ```html
 <eras-i18n-locale path='/locale-en.json'></eras-i18n-locale>
@@ -35,6 +36,22 @@ Asynchronously loads the specified locale file as a global object for use by the
           value: true
         },
 
+        /** 
+         * Resources loaded from locale file by ajax. Is basically a key/value
+         * pair arrangement where property names are the keys.
+         */
+        resources: Object,
+
+        /**
+         * Array of `eras-i18n-behavior` implementing elements that have been 
+         * registered with this locale.
+         * @type {eras-i18n[]}
+         */
+        i18ns: {
+          Type: Array,
+          value: []
+        },
+
         /**
          * **Only to be used for tests**
          * 
@@ -55,22 +72,27 @@ Asynchronously loads the specified locale file as a global object for use by the
        * the locale specific json file. Adds json object to 
        * window to make it globally available, then fires a
        * `eras-i18n-locale-loaded` event to alert to announce that
-       * it's ready. Will then listen for any more `eras-i18n-waiting`
-       * events and tell the firing `eras-i18n`s that it's ready.
+       * it's ready. Will then listen for any more `eras-i18n-attached`
+       * events and register them.
        * @param {Event} e `iron-ajax.response`
        */
       _handle: function (e) {
-        window.eras_i18n = e.detail.response;
-        this.fire('eras-i18n-locale-loaded' + this.testScope);
+        this.resources = e.detail.response;
+        this.loading = false; // shouldn't have to manually change this!
+        this.fire('eras-i18n-locale-loaded' + this.testScope, { locale: this });
 
-        document.addEventListener('eras-i18n-waiting' + this.testScope, function (e) {
-          e.detail.i18n.waiting = false;
+        var self = this;
+        document.addEventListener('eras-i18n-attached' + this.testScope, function (e) {
+          var i18n = e.detail.i18n;
+          i18n.locale = self;
+          self.i18ns.push(i18n);
         });
       }
 
       /**
        * Fired when the locale file has been loaded
        * @event eras-i18n-locale-loaded
+       * @param {{locale:Element}}
        */
     });
   </script>

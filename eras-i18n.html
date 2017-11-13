@@ -1,39 +1,45 @@
 <link rel='import' href='../polymer/polymer.html'>
+<link rel='import' href='eras-i18n-behavior.html'>
 <!--
 `eras-i18n`
 
-Looks up and displays the resource specified by the key. Can display plain text and HTML. MarkDown will need to be converted to HTML before inclusion in the locale file.
+Use this element to add text to add internationalised text to the page. Simple use:
 
-First you need to load the locale file like this:
-
+Include the locale element to load the resources somewhere on the page, probably 
+at the top:
 ```html
-<eras-i18n-locale path='/locale-en.json'></eras-i18n-locale>
+<eras-i18n-locale path='locale-en.json'></eras-i18n-locale>
 ```
 
-Then you can display resources like this:
-
+Then use the i18n element wherever you need text:
 ```html
-<eras-i18n key='some-key' arg0='cat' arg1='hat'></eras-i18n>
+<eras-i18n key='some-key'></eras-i18n>
 ```
+
+If you need to substitute in some dynamic content then you can use the `arg#` attributes
+that will be substituted for the equivalent `{#}` markers (where # is a number from 0-4).
+```html
+<eras-i18n key='some-key' arg0='Something to insert' arg1='Something else'></eras-i18n>
+```
+
+It should be noted that empty `arg#` attributes will be ignored, so if you supply a value
+only for `arg2` then it will replace the `{0}` markers, and not `{2}`
 
 @demo demo/eras-i18n_demo.html
 -->
 <dom-module id='eras-i18n'>
   <template>
-
+      
   </template>
   <script>
     Polymer({
       is: 'eras-i18n',
+      behaviors: [
+        Polymer.ErasI18nBehavior
+      ],
       properties: {
         /** The key for the desired resource */
         key: String,
-
-        /** 
-         * The resource specified by `key`, it is updated by 
-         * `_waitingChanged` observer. 
-         */
-        _resource: String,
 
         /**
          * The first of a series of strings that will be substituted into 
@@ -54,32 +60,6 @@ Then you can display resources like this:
           type: Array,
           value: []
         },
-
-        /**
-         * Signifies whether we are still waiting for the locale
-         * file to be loaded.
-         */
-        waiting: {
-          type: Boolean,
-          value: true,
-          notify: true,
-          reflectToAttribute: true,
-          observer: '_waitingChanged'
-        },
-
-        /**
-         * **Only to be used for tests**
-         * 
-         * Set this to a random string, it then gets appended to 
-         * the names of events that are fired and listened to.
-         * Prevents other tests that are running async from 
-         * interfering. *Make sure you set it to the same as
-         * the one you set on `eras-i18n-locale`*
-         */
-        testScope: {
-          type: String,
-          value: ''
-        }
       },
 
       observers: [
@@ -89,15 +69,6 @@ Then you can display resources like this:
         '_argsChanged(arg3)',
         '_argsChanged(arg4)'
       ],
-
-      attached: function () {
-        this.fire('eras-i18n-waiting' + this.testScope, { i18n: this });
-
-        var self = this;
-        document.addEventListener('eras-i18n-locale-loaded' + this.testScope, function () {
-          self.waiting = false;
-        });
-      },
 
       /**
        * Observes changes to `arg0` through `arg4` and fills `_args` if any of them
@@ -113,58 +84,18 @@ Then you can display resources like this:
         // remove empty args
         this._args = this._args.filter(function (a) { return a && a.length > 0; });
 
-        if (this._resource)
-          this.innerHTML = this._substitute(this._resource, this._args);
+        this._update();
       },
 
-      /**
-       * Observed changes to `waiting` and updates `innerHTML` 
-       * by calling `_get` and `_substitute` once loaded.
-       * @param {Boolean} waiting
-       */
-      _waitingChanged: function (waiting) {
-        if (waiting) return;
-
-        var content = this._get(this.key);
-        this._resource = content.resource;
-
-        if (content.success)
-          this.innerHTML = this._substitute(this._resource, this._args);
-        else
-          this.innerHTML = this.key;
+      /** Observes changes to `locale` and calls `_update()` */
+      _localeChanged: function () {
+        this._update();
       },
 
-      /**
-       * Looks up the supplied key in the global `window.eras_i18n`
-       * object and returns the associated value.
-       * @param {String} key
-       * @return {String}
-       */
-      _get: function (key) {
-        if (window.eras_i18n === undefined) {
-          console.warn('i18n object not defined');
-          return { success: false };
-        } else {
-          if (window.eras_i18n.hasOwnProperty(key)) {
-            return { resource: window.eras_i18n[key], success: true }
-          } else {
-            console.warn('i18n warning: Could not find key: ' + key)
-            return { success: false };
-          }
-        }
-      },
-
-      /**
-       * Substitutes `{0}` format markers found in `value` for 
-       * the corresponding string in `args`.
-       * @param {String} value
-       * @param {String[]}
-       */
-      _substitute: function (value, args) {
-        for (var i = 0; i < args.length; i++)
-          value = value.replace(new RegExp('\\{' + i + '\\}', 'g'), args[i]);
-
-        return value;
+      /** If the locale is ready then call `_i18n()` and update the `innerHTML` */
+      _update: function () {
+        if (this.locale && !this.locale.loading) 
+          this.innerHTML = this._i18n(this.locale, this.key, this._args);        
       }
     });
   </script>

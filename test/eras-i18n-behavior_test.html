@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang='en'>
+
+<head>
+  <meta charset='utf-8'>
+  <meta name='viewport' content='width=device-width, minimum-scale=1, initial-scale=1, user-scalable=yes'>
+
+  <title>eras-i18n-behavior tests</title>
+
+  <script src='../../webcomponentsjs/webcomponents-lite.js'></script>
+  <script src='../../web-component-tester/browser.js'></script>
+
+  <script src='../bower_components/iron-test-helpers/mock-interactions.js'></script>
+  <link rel='import' href='../eras-i18n-locale.html'>
+  <link rel='import' href='elements/simple-i18n.html'>
+</head>
+
+<body>
+  <test-fixture id='eras-i18n-behavior-fixture'>
+    <template is='dom-template'>
+      <eras-i18n-locale path='{{path}}' test-scope='{{scope}}'></eras-i18n-locale>
+      <simple-i18n key$='{{key}}' args$='{{args}}' test-scope='{{scope}}'></simple-i18n>
+    </template>
+  </test-fixture>
+
+  <script>
+    suite('eras-i18n-behavior', function () {
+      var path = 'locale-en.json';
+      var request;
+      var server;
+      var responseHeaders = {
+        json: { 'Content-Type': 'application/json' }
+      };
+
+      var scope;
+
+      setup(function () {
+        scope = '-' + Math.random().toString(36).substring(2, 10);
+        server = sinon.fakeServer.create();
+        server.respondWith(
+          'GET',
+          path, [
+            200,
+            responseHeaders.json,
+            JSON.stringify({
+              'text-1': 'Hello {0}!!!',
+              'text-2': 'Bye {0}!!!',
+            })
+          ]
+        );
+      });
+
+      test('Hello world', function (done) {
+        var f = fixture('eras-i18n-behavior-fixture', {
+          path: path,
+          scope: scope,
+          key: 'text-1',
+          args: ['world']
+        });
+
+        request = ajax.generateRequest();
+        server.respond();
+
+        flush(function () {
+          assert.equal('Hello world!!!', f[1].$.target.innerHTML);
+          
+          f[1].args = ['Ben'];
+          assert.equal('Hello Ben!!!', f[1].$.target.innerHTML);
+          
+          f[1].key = ['text-2'];
+          assert.equal('Bye Ben!!!', f[1].$.target.innerHTML);
+          done();
+        });
+      });
+    });
+  </script>
+</body>
+
+</html>
