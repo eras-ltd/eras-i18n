@@ -1,5 +1,5 @@
 {
-  "demo-string": "Hello world!",
-  "demo-html": "<h1>Header</h2><p>Just a paragraph</p>",
-  "demo-substitution": "My name is {0} {1}"
+  "hello-world":"Hello world!!!",
+  "introduction": "My name is {0}",
+  "html":"<b>{1}</b> can <i>even</i> output <u>{0}</u>..."
 }

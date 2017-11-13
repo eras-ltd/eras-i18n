@@ -19,7 +19,7 @@ Then use the i18n element wherever you need text:
 If you need to substitute in some dynamic content then you can use the `arg#` attributes
 that will be substituted for the equivalent `{#}` markers (where # is a number from 0-4).
 ```html
-<eras-i18n key='some-key' arg0='Something to insert' arg1='Something else'></eras-i18n>
+<eras-i18n key='some-key' arg0='Something to insert' arg1='{{myProperty}}'></eras-i18n>
 ```
 
 It should be noted that empty `arg#` attributes will be ignored, so if you supply a value
